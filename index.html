@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MentorBot — Dark WhatsApp</title>
+<style>
+    :root{
+        --bg:#0b1412;          /* overall page bg */
+        --panel:#0f1a18;       /* chat panel */
+        --bubble-user:#075e54; /* user bubble (dark green) */
+        --bubble-user-light:#128c7e;
+        --bubble-bot:#1d2a29;  /* bot bubble (slightly lighter) */
+        --accent:#25D366;      /* green accent */
+        --muted:#9aa5a0;
+        --input-bg:#07100f;
+        --glass: rgba(255,255,255,0.03);
+    }
+
+    html,body{
+        height:100%;
+        margin:0;
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, #07120f 0%, #05110f 100%);
+        color: #e6efea;
+        -webkit-font-smoothing:antialiased;
+    }
+
+    /* center container */
+    .app {
+        width: 100%;
+        height: 100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        padding:16px;
+        box-sizing:border-box;
+    }
+
+    /* chat panel */
+    .panel {
+        width: 420px;
+        max-width: calc(100% - 32px);
+        height: 90vh;
+        background: var(--panel);
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        display:flex;
+        flex-direction:column;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* header */
+    .header {
+        height:64px;
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:12px 14px;
+        background: linear-gradient(90deg, rgba(2,70,61,0.1), transparent);
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .brand {
+        display:flex;
+        gap:12px;
+        align-items:center;
+        flex:1;
+    }
+    .logo {
+        width:42px;
+        height:42px;
+        border-radius:10px;
+        background: var(--accent);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#04251f;
+        font-weight:700;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .title {
+        font-size:16px;
+        font-weight:600;
+        color:#e8f5ee;
+    }
+    .subtitle {
+        font-size:12px;
+        color:var(--muted);
+        margin-top:-4px;
+    }
+
+    /* header actions */
+    .actions {
+        display:flex;
+        gap:8px;
+        align-items:center;
+    }
+    .btn {
+        background:transparent;
+        color:var(--muted);
+        border: 1px solid rgba(255,255,255,0.03);
+        padding:8px 10px;
+        border-radius:8px;
+        cursor:pointer;
+        font-size:13px;
+    }
+    .btn.primary {
+        background: var(--accent);
+        color:#02261f;
+        border:none;
+    }
+
+    /* chat area */
+    #chatBox {
+        flex:1;
+        padding:16px;
+        overflow-y:auto;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+        background:
+            radial-gradient(circle at 10% 10%, rgba(255,255,255,0.01), transparent 10%),
+            transparent;
+    }
+
+    /* message bubbles */
+    .msg {
+        max-width:78%;
+        padding:10px 12px;
+        border-radius:14px;
+        line-height:1.35;
+        word-wrap:break-word;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.4) inset;
+        font-size:14px;
+    }
+    .row {
+        display:flex;
+        align-items:flex-end;
+    }
+    .row.user { justify-content:flex-end; }
+    .row.bot { justify-content:flex-start; }
+
+    .msg.user {
+        background: linear-gradient(180deg, var(--bubble-user), var(--bubble-user-light));
+        color: #e6f7f4;
+        border-bottom-right-radius:4px;
+        border-bottom-left-radius:14px;
+    }
+
+    .msg.bot {
+        background: var(--bubble-bot);
+        color: #d7efe3;
+        border-bottom-left-radius:4px;
+        border-bottom-right-radius:14px;
+    }
+
+    /* timestamp small */
+    .meta {
+        margin-top:6px;
+        font-size:11px;
+        color:var(--muted);
+        opacity:0.9;
+    }
+
+    /* typing indicator (three dots) */
+    .typing {
+        display:flex;
+        align-items:center;
+        gap:8px;
+        padding:8px 12px;
+    }
+    .typing .bubble {
+        background: transparent;
+        padding:6px 10px;
+    }
+    .dots {
+        display:inline-flex;
+        gap:6px;
+        align-items:center;
+    }
+    .dot {
+        width:8px;
+        height:8px;
+        background: rgba(255,255,255,0.12);
+        border-radius:50%;
+        animation: blink 1s infinite;
+    }
+    .dot:nth-child(2){ animation-delay:0.15s; }
+    .dot:nth-child(3){ animation-delay:0.3s; }
+
+    @keyframes blink {
+        0% { transform: translateY(0); opacity:0.35; background: rgba(255,255,255,0.08);}
+        50% { transform: translateY(-4px); opacity:1; background: var(--accent); }
+        100% { transform: translateY(0); opacity:0.35; background: rgba(255,255,255,0.08);}
+    }
+
+    /* input area */
+    .composer {
+        display:flex;
+        gap:8px;
+        padding:12px;
+        border-top: 1px solid rgba(255,255,255,0.02);
+        background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    }
+    .input {
+        flex:1;
+        display:flex;
+        gap:8px;
+        align-items:center;
+        background: var(--input-bg);
+        padding:8px;
+        border-radius:12px;
+        border: 1px solid rgba(255,255,255,0.03);
+    }
+    .input input {
+        flex:1;
+        background:transparent;
+        border:none;
+        outline:none;
+        color:#e6efe7;
+        font-size:15px;
+        padding:8px;
+    }
+    .icon-btn {
+        background:transparent;
+        border:none;
+        color:var(--muted);
+        cursor:pointer;
+        font-size:18px;
+        padding:6px;
+    }
+    .send {
+        background:var(--accent);
+        border:none;
+        color:#04251f;
+        padding:10px 14px;
+        border-radius:10px;
+        cursor:pointer;
+        font-weight:600;
+    }
+
+    /* responsive */
+    @media (max-width:480px){
+        .panel { width:100%; height:100vh; border-radius:0; }
+        .header { height:56px; padding:10px; }
+    }
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="panel" role="application" aria-label="MentorBot chat">
+        <div class="header" role="banner">
+            <div class="brand">
+                <div class="logo">MB</div>
+                <div>
+                    <div class="title">MentorBot</div>
+                    <div class="subtitle">Friendly student mentor</div>
+                </div>
+            </div>
+            <div class="actions">
+                <button id="clearBtn" class="btn" title="Clear chat">🗑️ Clear</button>
+                <button id="resetMemoryBtn" class="btn" title="Reset memory (clears conversation history)">♻️ Reset</button>
+            </div>
+        </div>
+
+        <div id="chatBox" aria-live="polite"></div>
+
+        <!-- typing indicator -->
+        <div id="typingIndicator" class="typing" style="display:none; padding-left:12px;">
+            <div class="bubble">
+                <div class="dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </div>
+            <div style="color:var(--muted); font-size:13px;">MentorBot is typing...</div>
+        </div>
+
+        <div class="composer" role="region" aria-label="Message composer">
+            <div class="input">
+                <button id="micBtn" class="icon-btn" title="Voice input (not enabled)">🎤</button>
+                <input id="messageInput" type="text" placeholder="Type a message" autocomplete="off" />
+                <button id="emojiBtn" class="icon-btn" title="Emoji (placeholder)">😊</button>
+            </div>
+            <button id="sendBtn" class="send">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* MentorBot WhatsApp-dark frontend
+   - Works with POST /chat-stream (streaming)
+   - Clear chat clears UI
+   - Reset Memory calls backend /reset if present (we'll implement backend action below)
+   - Small defensive checks added
+*/
+
+const chatBox = document.getElementById('chatBox');
+const typingIndicator = document.getElementById('typingIndicator');
+const sendBtn = document.getElementById('sendBtn');
+const messageInput = document.getElementById('messageInput');
+const clearBtn = document.getElementById('clearBtn');
+const resetMemoryBtn = document.getElementById('resetMemoryBtn');
+
+function addUserMessage(text){
+    const row = document.createElement('div');
+    row.className = 'row user';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg user';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addBotMessage(text){
+    const row = document.createElement('div');
+    row.className = 'row bot';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg bot';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* Streamed response function */
+async function sendStreamMessage(message){
+    try {
+        // add user bubble
+        addUserMessage(message);
+
+        // show typing indicator immediately
+        typingIndicator.style.display = 'flex';
+
+        // call backend
+        const resp = await fetch('http://127.0.0.1:8000/chat-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        if (!resp.ok || !resp.body) {
+            throw new Error('Server error or no stream available');
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+
+        // create bot bubble and append
+        const row = document.createElement('div');
+        row.className = 'row bot';
+        const bubble = document.createElement('div');
+        bubble.className = 'msg bot';
+        bubble.textContent = ''; // will fill as stream arrives
+        row.appendChild(bubble);
+        chatBox.appendChild(row);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        let done = false;
+        let started = false;
+
+        while (!done) {
+            const { value, done: streamDone } = await reader.read();
+            if (streamDone) {
+                done = true;
+                break;
+            }
+            const chunk = decoder.decode(value, { stream: true });
+            // ensure typing indicator is visible for at least a short while
+            if (!started) {
+                // keep indicator visible a little bit (so user sees it)
+                setTimeout(() => { typingIndicator.style.display = 'none'; }, 250);
+                started = true;
+            }
+            bubble.textContent += chunk;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // ensure typing indicator hidden
+        typingIndicator.style.display = 'none';
+
+    } catch (err) {
+        typingIndicator.style.display = 'none';
+        addBotMessage('⚠️ Error: could not contact server. Check backend and try again.');
+        console.error('Stream error', err);
+    }
+}
+
+/* send when click or press Enter */
+sendBtn.addEventListener('click', () => {
+    const text = messageInput.value.trim();
+    if (!text) return;
+    messageInput.value = '';
+    sendStreamMessage(text);
+});
+messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+    }
+});
+
+/* Clear UI (keeps backend memory) */
+clearBtn.addEventListener('click', () => {
+    chatBox.innerHTML = '';
+    typingIndicator.style.display = 'none';
+});
+
+/* Reset backend memory if /reset exists */
+resetMemoryBtn.addEventListener('click', async () => {
+    // clear UI always
+    chatBox.innerHTML = '';
+    typingIndicator.style.display = 'none';
+    try {
+        // backend endpoint optional; if not present it will 404 and be ignored
+        const r = await fetch('http://127.0.0.1:8000/reset', { method: 'POST' });
+        if (r.ok) {
+            addBotMessage('✅ Conversation memory reset.');
+        } else {
+            addBotMessage('⚠️ Reset endpoint not available; UI cleared only.');
+        }
+    } catch (e) {
+        addBotMessage('⚠️ Reset failed; UI cleared only.');
+    }
+});
+
+/* small UX: focus input on load */
+window.addEventListener('load', () => {
+    messageInput.focus();
+});
+</script>
+</body>
+</html>
