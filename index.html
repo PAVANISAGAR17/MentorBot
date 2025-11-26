@@ -3,131 +3,171 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>MentorBot — Dark WhatsApp</title>
+<title>MentorBot</title>
+
 <style>
-    :root{
-        --bg:#0b1412;
-        --panel:#0f1a18;
-        --bubble-user:#075e54;
-        --bubble-user-light:#128c7e;
-        --bubble-bot:#1d2a29;
-        --accent:#25D366;
-        --muted:#9aa5a0;
-        --input-bg:#07100f;
-    }
-    html,body{
-        height:100%;
-        margin:0;
-        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background:#07120f;
-        color: #e6efea;
-    }
-    .app {
-        width: 100%;
-        height: 100vh;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        padding:16px;
-    }
-    .panel {
-        width: 420px;
-        max-width: 100%;
-        height: 90vh;
-        background: var(--panel);
-        border-radius: 16px;
-        display:flex;
-        flex-direction:column;
-        overflow: hidden;
-    }
-    .header {
-        height:64px;
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding:12px 14px;
-        border-bottom: 1px solid #222;
-    }
-    .logo {
-        width:42px;
-        height:42px;
-        border-radius:10px;
-        background: var(--accent);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-weight:700;
-        color:#04251f;
-    }
-    #chatBox {
-        flex:1;
-        padding:16px;
-        overflow-y:auto;
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-    }
-    .row { display:flex; }
-    .row.user { justify-content:flex-end; }
-    .row.bot { justify-content:flex-start; }
-    .msg {
-        max-width:78%;
-        padding:10px 12px;
-        border-radius:14px;
-        font-size:14px;
-    }
-    .msg.user {
-        background: var(--bubble-user);
-    }
-    .msg.bot {
-        background: var(--bubble-bot);
-    }
-    .composer {
-        display:flex;
-        gap:8px;
-        padding:12px;
-        border-top: 1px solid #222;
-    }
-    .input {
-        flex:1;
-        display:flex;
-        background: var(--input-bg);
-        border-radius:12px;
-        padding:8px;
-    }
-    .input input {
-        flex:1;
-        background:transparent;
-        border:none;
-        outline:none;
-        color:white;
-    }
-    .send {
-        background:var(--accent);
-        border:none;
-        padding:10px 14px;
-        border-radius:10px;
-        font-weight:600;
-    }
-    .typing { display:flex; gap:6px; padding:10px; }
-    .dot {
-        width:8px;
-        height:8px;
-        border-radius:50%;
-        background:#aaa;
-        animation: blink 1s infinite;
-    }
-    @keyframes blink {
-        0% {opacity:.3;}
-        50% {opacity:1;}
-        100% {opacity:.3;}
-    }
+:root{
+    --panel:#0f1a18;
+    --bubble-user:#075e54;
+    --bubble-user-light:#128c7e;
+    --bubble-bot:#1d2a29;
+    --accent:#25D366;
+    --input-bg:#07100f;
+}
+
+html,body{
+    height:100%;
+    margin:0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background:#07120f;
+    color: #e6efea;
+}
+
+.app {
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:10px;
+}
+
+.panel {
+    width:420px;
+    max-width:100%;
+    height:90vh;
+    background:var(--panel);
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.header {
+    height:60px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    border-bottom:1px solid #222;
+}
+
+.logo {
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    background:var(--accent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#04251f;
+}
+
+#chatBox {
+    flex:1;
+    padding:14px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.row { display:flex; }
+.row.user { justify-content:flex-end; }
+.row.bot { justify-content:flex-start; }
+
+.msg {
+    max-width:78%;
+    padding:10px 12px;
+    border-radius:14px;
+    font-size:14px;
+    line-height:1.4;
+}
+
+.msg.user {
+    background:var(--bubble-user);
+}
+
+.msg.bot {
+    background:var(--bubble-bot);
+}
+
+.msg.bot strong {
+    display:block;
+    margin-top:6px;
+    margin-bottom:4px;
+    color:#9fffd7;
+}
+
+.msg.bot ul {
+    padding-left:18px;
+    margin:6px 0;
+}
+
+.msg.bot li {
+    margin-bottom:4px;
+}
+
+.composer {
+    display:flex;
+    gap:8px;
+    padding:12px;
+    border-top:1px solid #222;
+}
+
+.input {
+    flex:1;
+    display:flex;
+    background:var(--input-bg);
+    border-radius:12px;
+    padding:8px;
+}
+
+.input input {
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:white;
+    font-size:15px;
+}
+
+.send {
+    background:var(--accent);
+    border:none;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.typing {
+    display:flex;
+    gap:6px;
+    padding:10px 14px;
+}
+
+.dot {
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#aaa;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% {opacity:.3;}
+    50% {opacity:1;}
+    100% {opacity:.3;}
+}
 </style>
 </head>
 
 <body>
 <div class="app">
     <div class="panel">
+
         <div class="header">
             <div class="logo">MB</div>
             <h3>MentorBot</h3>
@@ -143,10 +183,11 @@
 
         <div class="composer">
             <div class="input">
-                <input id="messageInput" placeholder="Type a message..." />
+                <input id="messageInput" placeholder="Type your question..." />
             </div>
             <button id="sendBtn" class="send">Send</button>
         </div>
+
     </div>
 </div>
 
@@ -159,20 +200,11 @@ const messageInput = document.getElementById('messageInput');
 function addUserMessage(text){
     const row = document.createElement('div');
     row.className = 'row user';
+
     const bubble = document.createElement('div');
     bubble.className = 'msg user';
     bubble.textContent = text;
-    row.appendChild(bubble);
-    chatBox.appendChild(row);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
 
-function addBotMessage(text){
-    const row = document.createElement('div');
-    row.className = 'row bot';
-    const bubble = document.createElement('div');
-    bubble.className = 'msg bot';
-    bubble.textContent = text;
     row.appendChild(bubble);
     chatBox.appendChild(row);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -194,15 +226,17 @@ async function sendStreamMessage(message){
 
         const row = document.createElement('div');
         row.className = 'row bot';
+
         const bubble = document.createElement('div');
         bubble.className = 'msg bot';
         row.appendChild(bubble);
+
         chatBox.appendChild(row);
 
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            bubble.textContent += decoder.decode(value);
+            bubble.innerHTML += decoder.decode(value);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
@@ -210,8 +244,13 @@ async function sendStreamMessage(message){
 
     } catch (err) {
         typingIndicator.style.display = 'none';
-        addBotMessage("⚠️ Server error. Try again.");
-        console.error(err);
+        const row = document.createElement('div');
+        row.className = 'row bot';
+        const bubble = document.createElement('div');
+        bubble.className = 'msg bot';
+        bubble.textContent = "Server error. Please try again.";
+        row.appendChild(bubble);
+        chatBox.appendChild(row);
     }
 }
 
