@@ -82,8 +82,7 @@ html,body{
     padding:10px 12px;
     border-radius:14px;
     font-size:14px;
-    line-height:1.6;
-    white-space:pre-wrap;
+    line-height:1.5;
 }
 
 .msg.user {
@@ -94,9 +93,10 @@ html,body{
     background:var(--bubble-bot);
 }
 
+/* Bot formatting */
 .msg.bot strong {
     display:block;
-    margin-top:8px;
+    margin-top:6px;
     margin-bottom:6px;
     color:#9fffd7;
 }
@@ -107,7 +107,7 @@ html,body{
 }
 
 .msg.bot li {
-    margin-bottom:6px;
+    margin-bottom:4px;
 }
 
 .composer {
@@ -198,6 +198,30 @@ const typingIndicator = document.getElementById('typingIndicator');
 const sendBtn = document.getElementById('sendBtn');
 const messageInput = document.getElementById('messageInput');
 
+/* Convert plain text to formatted UI */
+function formatBotText(text) {
+    // Convert TITLE: to bold heading
+    text = text.replace(/TITLE:\s*(.+)/g, "<strong>$1</strong>");
+
+    // Convert POINTS to bullets
+    if (text.includes("POINTS:")) {
+        const parts = text.split("POINTS:");
+        const before = parts[0];
+        const pointsText = parts[1];
+
+        const items = pointsText.split("-").filter(x => x.trim() !== "");
+        let ul = "<ul>";
+        items.forEach(item => {
+            ul += "<li>" + item.trim() + "</li>";
+        });
+        ul += "</ul>";
+
+        return before + ul;
+    }
+
+    return text;
+}
+
 function addUserMessage(text){
     const row = document.createElement('div');
     row.className = 'row user';
@@ -234,12 +258,16 @@ async function sendStreamMessage(message){
 
         chatBox.appendChild(row);
 
+        let fullText = "";
+
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
 
             const chunk = decoder.decode(value);
-            bubble.innerHTML += chunk + " ";
+            fullText += chunk;
+
+            bubble.innerHTML = formatBotText(fullText);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
@@ -247,11 +275,14 @@ async function sendStreamMessage(message){
 
     } catch (err) {
         typingIndicator.style.display = 'none';
+
         const row = document.createElement('div');
         row.className = 'row bot';
+
         const bubble = document.createElement('div');
         bubble.className = 'msg bot';
         bubble.textContent = "Server error. Please try again.";
+
         row.appendChild(bubble);
         chatBox.appendChild(row);
     }
