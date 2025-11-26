@@ -82,7 +82,8 @@ html,body{
     padding:10px 12px;
     border-radius:14px;
     font-size:14px;
-    line-height:1.4;
+    line-height:1.6;
+    white-space:pre-wrap;
 }
 
 .msg.user {
@@ -95,8 +96,8 @@ html,body{
 
 .msg.bot strong {
     display:block;
-    margin-top:6px;
-    margin-bottom:4px;
+    margin-top:8px;
+    margin-bottom:6px;
     color:#9fffd7;
 }
 
@@ -106,7 +107,7 @@ html,body{
 }
 
 .msg.bot li {
-    margin-bottom:4px;
+    margin-bottom:6px;
 }
 
 .composer {
@@ -236,7 +237,9 @@ async function sendStreamMessage(message){
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            bubble.innerHTML += decoder.decode(value);
+
+            const chunk = decoder.decode(value);
+            bubble.innerHTML += chunk + " ";
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
