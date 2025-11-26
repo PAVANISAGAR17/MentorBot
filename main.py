@@ -6,13 +6,10 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import os
 
-# Load environment variables
 load_dotenv()
 
-# FastAPI app
 app = FastAPI()
 
-# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,42 +18,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Request model
 class ChatRequest(BaseModel):
     message: str
 
-# Conversation memory
 conversation_history = [
     {
         "role": "system",
         "content": (
             "You are MentorBot, a friendly senior student mentor. "
-            "Explain deeply but in a very simple beginner-friendly way. "
-            "Use bold headings using <strong> tags. "
-            "Use bullet points using <ul> and <li> HTML tags. "
-            "Never use markdown symbols like # or *. "
-            "Always add proper spacing between words and lines. "
-            "Your response must be clean HTML that can be safely shown inside a chat bubble."
+            "Explain everything clearly for a beginner. "
+            "Use short bold headings using <strong>Heading</strong>. "
+            "Use bullet points with <ul><li>. "
+            "Do NOT use # or * symbols. "
+            "Do NOT add extra spaces between words. "
+            "Write natural English sentences like real chat."
         ),
     }
 ]
 
-# Health check
 @app.get("/")
 def home():
     return {"message": "MentorBot API is running!"}
 
-# Normal chat
 @app.post("/chat")
 def chat(msg: dict):
     user_message = msg.get("message", "")
-
-    conversation_history.append(
-        {"role": "user", "content": user_message}
-    )
+    conversation_history.append({"role": "user", "content": user_message})
 
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
@@ -64,14 +53,10 @@ def chat(msg: dict):
     )
 
     ai_reply = response.choices[0].message.content
-
-    conversation_history.append(
-        {"role": "assistant", "content": ai_reply}
-    )
+    conversation_history.append({"role": "assistant", "content": ai_reply})
 
     return {"reply": ai_reply}
 
-# Streaming chat (ChatGPT style)
 @app.post("/chat-stream")
 async def chat_stream(request: ChatRequest):
 
@@ -92,7 +77,7 @@ async def chat_stream(request: ChatRequest):
             if chunk.choices and chunk.choices[0].delta.content:
                 part = chunk.choices[0].delta.content
                 full_reply += part
-                yield part  # ✅ DO NOT TOUCH SPACES
+                yield part  # ✅ NO CLEANING, NO SPACE CHANGES
 
         conversation_history.append(
             {"role": "assistant", "content": full_reply}
