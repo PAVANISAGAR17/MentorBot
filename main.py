@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
+import re
 
 # Load .env file
 load_dotenv()
@@ -28,14 +29,26 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 class ChatRequest(BaseModel):
     message: str
 
-# Conversation memory
+
+# ✅ CLEAN MARKDOWN FUNCTION (REMOVES #, *, BULLETS, ETC.)
+def clean_markdown(text: str) -> str:
+    text = re.sub(r"[*_#>`]", "", text)          # remove *, _, #, >, `
+    text = re.sub(r"\n\s*-\s*", "\n", text)      # remove bullet dashes
+    text = re.sub(r"\n{2,}", "\n\n", text)       # clean extra newlines
+    return text.strip()
+
+
+# ✅ SYSTEM PROMPT (PLAIN TEXT ONLY)
 conversation_history = [
     {
         "role": "system",
         "content": (
-            "You are MentorBot, a friendly senior student mentor. "
-            "Explain concepts very clearly, simply, and step-by-step. "
-            "Never use complicated terms unless necessary, and always stay positive and motivating."
+            "You are MentorBot, a friendly senior-student mentor. "
+            "Explain everything very clearly, simply, and step by step. "
+            "Always assume the user is a complete beginner. "
+            "IMPORTANT RULE: Reply in plain text only. "
+            "Do NOT use markdown, headings, bullet points, #, *, or special formatting. "
+            "Write like a real human chatting in WhatsApp style with simple sentences."
         ),
     }
 ]
@@ -46,31 +59,38 @@ def home():
     return {"message": "MentorBot API is running!"}
 
 
-# Normal chat (non-stream)
+# ✅ NORMAL CHAT (NON-STREAM)
 @app.post("/chat")
 def chat(msg: dict):
     user_message = msg.get("message", "")
 
-    conversation_history.append({"role": "user", "content": user_message})
+    conversation_history.append(
+        {"role": "user", "content": user_message}
+    )
 
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
         messages=conversation_history
     )
 
-    ai_reply = response.choices[0].message.content
+    raw_reply = response.choices[0].message.content
+    clean_reply = clean_markdown(raw_reply)
 
-    conversation_history.append({"role": "assistant", "content": ai_reply})
+    conversation_history.append(
+        {"role": "assistant", "content": clean_reply}
+    )
 
-    return {"reply": ai_reply}
+    return {"reply": clean_reply}
 
 
-# Streaming chat (ChatGPT-style typing)
+# ✅ STREAMING CHAT (CHATGPT STYLE TYPING, PLAIN TEXT ONLY)
 @app.post("/chat-stream")
 async def chat_stream(request: ChatRequest):
 
     # Add user message to memory
-    conversation_history.append({"role": "user", "content": request.message})
+    conversation_history.append(
+        {"role": "user", "content": request.message}
+    )
 
     def generate():
         stream = client.chat.completions.create(
@@ -82,12 +102,16 @@ async def chat_stream(request: ChatRequest):
         full_reply = ""
 
         for chunk in stream:
-            if chunk.choices[0].delta.content:
+            if chunk.choices and chunk.choices[0].delta.content:
                 part = chunk.choices[0].delta.content
-                full_reply += part
-                yield part  # send to UI
+                cleaned_part = clean_markdown(part)
 
-        # Save the bot's full reply in memory
-        conversation_history.append({"role": "assistant", "content": full_reply})
+                full_reply += cleaned_part
+                yield cleaned_part   # send cleaned text to UI
+
+        # Save cleaned reply in memory
+        conversation_history.append(
+            {"role": "assistant", "content": full_reply}
+        )
 
     return StreamingResponse(generate(), media_type="text/plain")
